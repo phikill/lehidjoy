@@ -1,5 +1,0 @@
-main.c(191): Warning! W131: No prototype found for function 'processTrigger'
-main.c(318): Warning! W113: Pointer type mismatch
-main.c(318): Note! I2003: source conversion type is 'SP_DEVICE_INTERFACE_DETAIL_DATA_ALIGNED *'
-main.c(318): Note! I2004: target conversion type is 'struct _SP_DEVICE_INTERFACE_DETAIL_DATA_A *'
-main.c(396): Warning! W131: No prototype found for function 'wcscpy_s'

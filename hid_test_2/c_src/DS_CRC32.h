@@ -7,16 +7,12 @@
 
 	Licensed under the MIT License (To be found in repository root directory)
 */
-//#pragma once
+
 
 #ifndef DS_CRC32_H
 #define DS_CRC32_H
 
 #include<stddef.h>
-
-//#include<DualSenseWindows/DSW_Api.h>
-//#include<DualSenseWindows/Device.h>
-//#include<DualSenseWindows/DS5State.h>
 
 #include<Windows.h>
 
@@ -56,79 +52,13 @@ static const UINT32 hashTable[256] = {
     0x616495a3, 0x1663a535, 0x8f6af48f, 0xf86dc419, 0x660951ba, 0x110e612c, 0x88073096, 0xff000000
 };
 
-static const UINT32 crcSeed = 0xeada2d49;  // Exemplo de valor de semente do CRC
+static const UINT32 crcSeed = 0xeada2d49;  /* CRC seed value example */
 
-// Função para calcular CRC32
-UINT32 computeCRC32(unsigned char* buffer, size_t len) 
-{
-    size_t i;
-    // Start point
-    UINT32 result = crcSeed;
-    
-    // Foreach element in arrray
-    for (i = 0; i < len; i++) 
-    {
-        // Compute crc
-        result = hashTable[((unsigned char)result) ^ ((unsigned char)buffer[i])] ^ (result >> 8);
-    }
+/* Function to calculate CRC32 */
+UINT32 computeCRC32(unsigned char* buffer, size_t len);
 
-    // Return result
-    return result;
-}
 
 #endif /* DS_CRC32_H */
-
-/*
-// Função para cálculo de CRC32
-UINT32 computeCRC32(unsigned char* buffer, size_t len) 
-{
-    UINT32 crc = crcSeed;
-    size_t i;
-    unsigned char byte;
-
-    for (i = 0; i < len; i++) 
-    {
-        byte = buffer[i];
-        crc = (crc >> 8) ^ hashTable[(crc & 0xFF) ^ byte];
-    }
-
-    return crc ^ crcSeed;  // Ou inverso se necessário
-}
-*/
-
-/*
-namespace __DS5W {
-	/// <summary>
-	/// Pre gennerated CRC hashing for DS5
-	/// </summary>
-	class CRC32 {
-	private:
-		/// <summary>
-		/// Fast lookup precalculated byte crc hashes
-		/// </summary>
-		const static UINT32 hashTable[256];
-
-		/// <summary>
-		/// Start seed for crc hash
-		/// </summary>
-		const static UINT32 crcSeed;
-
-
-	public:
-		/// <summary>
-		/// Compute the CRC32 Hash
-		/// </summary>
-		/// <param name="buffer">Input buffer</param>
-		/// <param name="len">Length of buffer</param>
-		/// <returns>Computed crc value</returns>
-		static UINT32 compute(unsigned char* buffer, size_t len);
-	};
-}*/
-
-
-
-
-
 
 
 

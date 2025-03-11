@@ -15,7 +15,7 @@ I don't know which Windows XP services pack it works on, test it and see if it w
 
 ## What do I need to compile?
 
-[Open Watcom 1.9 - Download Button](http://sininenankka.dy.fi/~sami/watcom_mirror/open-watcom-c-win32-1.9.exe)  
+[Open Watcom 1.9 - Download Button](https://openwatcom.org/ftp/install/open-watcom-c-win32-1.9.exe)  
 
 # Problems!
 

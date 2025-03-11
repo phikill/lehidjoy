@@ -10,18 +10,12 @@ https://github.com/Ohjurot/DualSense-Windows
 # What is the difference in this repository?
 
 
-This code is compatible with c89 and Windows XP   
-I don't know which Windows XP services pack it works on, test it and see if it works  
+This code is compatible with **ANSI C 89** and **Windows XP**
 
 ## What do I need to compile?
 
+##### Open Watcom Compiler.
 [Open Watcom 1.9 - Download Button](https://openwatcom.org/ftp/install/open-watcom-c-win32-1.9.exe)  
 
-# Problems!
 
-Several, I translated the code in a hurry and laziness, so something could happen, for example: the joysticks are a little out of calibration, and the triggers don't weigh and have no effects.  
-
-but the program works fine  
-
-
-the library calls are WATCALL_ and _CDECL  
+##### the library calls are WATCALL_ and _CDECL  

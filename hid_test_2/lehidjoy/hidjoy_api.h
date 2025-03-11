@@ -9,9 +9,10 @@
 	11.2020 Ludwig Füchsl
 
 	Licensed under the MIT License (To be found in repository root directory)
+
+    MODC89: PHIKILL
 */
 
-#pragma once
 
 #if defined(DS5W_BUILD_DLL)
 	#define DS5W_API __declspec(dllexport)
@@ -66,7 +67,6 @@ typedef enum
 
     /* Bluetooth communication error */
     E_BT_COM = 8
-
 } DS5W_ReturnValue;
 
 typedef DS5W_ReturnValue DS5W_RV;

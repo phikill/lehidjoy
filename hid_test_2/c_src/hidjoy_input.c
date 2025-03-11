@@ -1,8 +1,21 @@
+/*
+    DS5_Input.c is part of DualSenseWindows
+    https://github.com/Ohjurot/DualSense-Windows
+
+    Contributors of this file:
+    11.2020 Ludwig Füchsl
+
+    Licensed under the MIT License (To be found in repository root directory)
+
+    MODC89: PHIKILL
+*/
+
 
 #include"hidjoy_input.h"
 
 
-void evaluateHidInputBuffer(unsigned char* hidInBuffer, DS5InputState* ptrInputState) 
+void evaluateHidInputBuffer(unsigned char* hidInBuffer, 
+                            DS5InputState* ptrInputState) 
 {
 	UINT32 touchpad1Raw;
 	UINT32 touchpad2Raw;

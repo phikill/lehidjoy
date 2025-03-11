@@ -1,3 +1,15 @@
+/*
+    Helpers.h is part of DualSenseWindows
+    https://github.com/Ohjurot/DualSense-Windows
+
+    Contributors of this file:
+    11.2020 Ludwig Füchsl
+
+    Licensed under the MIT License (To be found in repository root directory)
+
+    MODC89: PHIKILL
+*/
+
 #ifndef HELPERS_H
 #define HELPERS_H
 

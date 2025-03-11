@@ -16,6 +16,7 @@ Vendor ID (VID) e Product ID (PID):
 DualShock 4: VID: 0x054C (Sony) PID: 0x05C4 (CUH-ZCT1x) Before 2016
 DualShock 4: VID: 0x054C (Sony) PID: 0x09CC (CUH-ZCT2x) After  2016
 DualSense 5: VID: 0x054C (Sony) PID: 0x0CE6 (Basic DS5)
+DualSense 5: VID: 0x054C (Sony) PID: 0x0DF2 (DualSense Edge)
 
 */
 
@@ -28,7 +29,7 @@ void list_hid_devices()
     DWORD index = 0;
     GUID hidGuid;
 
-    HidD_GetHidGuid(&hidGuid); // Obtém o GUID do HID
+    HidD_GetHidGuid(&hidGuid); /* Obtém o GUID do HID *
     deviceInfoSet = SetupDiGetClassDevs(&hidGuid, NULL, NULL, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
     
     if (deviceInfoSet == INVALID_HANDLE_VALUE) 
@@ -51,18 +52,18 @@ void list_hid_devices()
 
         devInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
 
-        // Obtém o tamanho necessário para deviceDetail
+        /* Obtém o tamanho necessário para deviceDetail *
         if (!SetupDiGetDeviceInterfaceDetail(deviceInfoSet, &deviceInterfaceData, NULL, 0, &requiredSize, NULL)) 
         {
             if (GetLastError() != ERROR_INSUFFICIENT_BUFFER) 
             {
                 printf(" - Dispositivo HID %lu: Erro ao obter tamanho necessário (código %lu)\n", index, GetLastError());
-                index++; // Continua para o próximo dispositivo
+                index++; /* Continua para o próximo dispositivo *
                 continue;
             }
         }
 
-        // Aloca memória corretamente alinhada
+        /* Aloca memória corretamente alinhada *
         deviceDetail = (SP_DEVICE_INTERFACE_DETAIL_DATA_ALIGNED*)malloc(requiredSize);
         if(!deviceDetail) 
         {
@@ -71,15 +72,15 @@ void list_hid_devices()
         }
         deviceDetail->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA_ALIGNED);
 
-        // Obtém os detalhes do dispositivo
+        /* Obtém os detalhes do dispositivo *
         if(!SetupDiGetDeviceInterfaceDetail(deviceInfoSet, &deviceInterfaceData, (SP_DEVICE_INTERFACE_DETAIL_DATA*)deviceDetail, requiredSize, NULL, &devInfoData)) {
             printf(" - Dispositivo HID %lu: Erro ao obter detalhes do dispositivo (código %lu)\n", index, GetLastError());
             free(deviceDetail);
-            index++; // Continua para o próximo dispositivo
+            index++; /* Continua para o próximo dispositivo *
             continue;
         }
 
-        // Obtém o nome amigável do dispositivo
+        /* Obtém o nome amigável do dispositivo *
         if(SetupDiGetDeviceRegistryProperty(deviceInfoSet, &devInfoData, SPDRP_FRIENDLYNAME, NULL, (PBYTE)deviceName, sizeof(deviceName), NULL) ||
            SetupDiGetDeviceRegistryProperty(deviceInfoSet, &devInfoData, SPDRP_DEVICEDESC, NULL, (PBYTE)deviceName, sizeof(deviceName), NULL)) 
         {
@@ -90,12 +91,12 @@ void list_hid_devices()
             printf(" - Dispositivo HID %lu: Nome nao disponivel (codigo %lu)\n", index, GetLastError());
         }
 
-        // Obtém o Hardware ID para extrair VID e PID
+        /* Obtém o Hardware ID para extrair VID e PID *
         if (SetupDiGetDeviceRegistryProperty(deviceInfoSet, &devInfoData, SPDRP_HARDWAREID, NULL, (PBYTE)hardwareID, sizeof(hardwareID), NULL)) 
         {
             printf("   -> Hardware ID: %s\n", hardwareID);
 
-            // Verifica se é o DualSense 5 (VID 054C, PID 0CE6 ou 0DF2)
+            /* Verifica se é o DualSense 5 (VID 054C, PID 0CE6 ou 0DF2) *
             if (strstr(hardwareID, "VID_054C") && (strstr(hardwareID, "PID_0CE6") || strstr(hardwareID, "PID_0DF2"))) 
             {
                 printf(" \n ============================================ \n");
@@ -112,14 +113,51 @@ void list_hid_devices()
 }*/
 
 
+
+
 #include"lehidjoy/lehidjoy.h"
 
-#define MAX_DEVICES 8 /* Maximum number of devices to be stored */
 
-
-int main() 
+/* Function to display the bytes of the outState structure */
+void printOutStateHex(const DS5OutputState *outState) 
 {
-    //list_hid_devices();
+    size_t i = 0;
+    unsigned char *rawData = (unsigned char *)outState;
+    size_t dataSize = sizeof(DS5OutputState);
+
+    printf("Dump de outState (%zu bytes):\n", dataSize);
+    for(i = 0; i < dataSize; i++) 
+    {
+        printf("%02X ", rawData[i]);  /* Print each byte in hexadecimal */
+        if ((i + 1) % 8 == 0) printf("\n"); /* Line break every 8 bytes */
+    }
+    printf("\n");
+}
+
+
+void check_sizes() 
+{
+    printf("Size of TriggerEffect: %lu bytes\n", (unsigned long)sizeof(TriggerEffect));
+    printf("Size of AnalogStick: %zu bytes\n", sizeof(AnalogStick));
+    printf("Size of Vec3: %zu bytes\n", sizeof(Vec3));
+    printf("Size of Color: %zu bytes\n", sizeof(Color));
+    printf("Size of Touch: %zu bytes\n", sizeof(Touch));
+    printf("Size of Battery: %zu bytes\n", sizeof(Battery));
+    printf("Size of MicLed: %zu bytes\n", sizeof(MicLed));
+    printf("Size of TriggerEffectType: %zu bytes\n", sizeof(TriggerEffectType));
+    printf("Size of TriggerEffect: %zu bytes\n", sizeof(TriggerEffect));
+    printf("Size of LedBrightness: %zu bytes\n", sizeof(LedBrightness));
+    printf("Size of PlayerLeds: %zu bytes\n", sizeof(PlayerLeds));
+    printf("Size of DS5InputState: %zu bytes\n", sizeof(DS5InputState));
+    printf("Size of DS5OutputState: %zu bytes\n", sizeof(DS5OutputState));
+}
+
+#define MAX_DEVICES 5 /* Maximum number of devices to be stored */
+
+
+int main(int argc, char *argv[]) 
+{
+    /* list_hid_devices(); */
     
     
     DeviceEnumInfo devices[MAX_DEVICES]; /* Array to store the devices */
@@ -132,6 +170,7 @@ int main()
     if(requiredLength == 0) 
     {
         printf("\n No devices found. <[^~~^]> \n");
+        system("pause");
         return -15;
     }
 
@@ -176,7 +215,7 @@ int main()
     {
         DS5InputState inState;
         DS5OutputState outState;
-        /* Color intentsity */
+        /* Color intensity */
         float intensity = 1.0f;
         uint16_t lrmbl = 0.0;
         uint16_t rrmbl = 0.0;
@@ -184,12 +223,32 @@ int main()
         TriggerEffectType rType = NoResitance;
         int btMul = con._internal.connection == BT ? 10 : 1;
         
+        char title[256] = "DS5 ("; /* Start With "DS5 (" */
+
         printf(" \n DualSense controller connected \n");
+        system("pause");
+
+        /* Add "BT" or "USB" */
+        if (con._internal.connection == BT)
+        {
+            strcat(title, "BT");
+        } 
+        else 
+        {
+            strcat(title, "USB");
+        }
+
+        strcat(title, ") Press L1 and R1 to exit");
+
+        /* Sets the console title */
+        SetConsoleTitleA(title);
+
 
         memset(&inState, 0, sizeof(DS5InputState));
         memset(&outState, 0, sizeof(DS5OutputState));
 
-        while(!(inState.buttonsA & DS5W_ISTATE_BTN_A_LEFT_BUMPER && inState.buttonsA & DS5W_ISTATE_BTN_A_RIGHT_BUMPER))
+        while(!(inState.buttonsA & DS5W_ISTATE_BTN_A_LEFT_BUMPER && 
+                inState.buttonsA & DS5W_ISTATE_BTN_A_RIGHT_BUMPER))
         {
             DS5W_ReturnValue DeviceInputState;
             DeviceInputState = getDeviceInputState(&con, &inState);
@@ -199,6 +258,8 @@ int main()
 				/* === Read Input ===
                   Build all universal buttons (USB and BT) as text */
 				
+                printf("\n \n \n \n \n \n \n \n \n \n \n \n \n \n \n");
+
 				printf("Left Stick\tX: %d\tY: %d%s\n", (int)inState.leftStick.x, 
                                                        (int)inState.leftStick.y, 
                 (inState.buttonsA & DS5W_ISTATE_BTN_A_LEFT_STICK ? "\tPUSH" : ""));
@@ -276,23 +337,12 @@ int main()
                 if(outState.rightRumble) 
                 {
                     outState.playerLeds.playerLedFade = true;
-                    outState.playerLeds.bitmask = DS5W_OSTATE_PLAYER_LED_MIDDLE;
-                    outState.playerLeds.brightness = LED_BRIGHTNESS_HIGH;
+                    outState.playerLeds.bitmask = HIDJOY_LED_PLAYER_1;
+                    outState.playerLeds.brightness = 0x00;
                 }
                 else 
                 {
                     outState.playerLeds.bitmask = 0;
-                }
-				
-				
-                /* Set force */
-                if(inState.rightTrigger == 0xFF) 
-                {
-                    rType = ContinuousResitance;
-                } 
-                else if(inState.rightTrigger == 0x00) 
-                {
-                    rType = NoResitance;
                 }
 				
                 /* Mic led */
@@ -305,6 +355,16 @@ int main()
                     outState.microphoneLed = OFF;
                 }
 				
+                /* Set force */
+                if(inState.rightTrigger == 0xFF) 
+                {
+                    printf("\n rightTrigger MAX ! =============================== \n");
+                    rType = ContinuousResitance; /* = ContinuousResitance */
+                } 
+                else if(inState.rightTrigger == 0x00) 
+                {
+                    rType = NoResitance; /* = NoResitance */
+                }
 				
                 /* Left trigger is clicky / section */
                 outState.leftTriggerEffect.effectType = SectionResitance;
@@ -316,7 +376,14 @@ int main()
                 outState.rightTriggerEffect.Continuous.force = 0xFF;
                 outState.rightTriggerEffect.Continuous.startPosition = 0x00;                
 				
-                setDeviceOutputState(&con, &outState);
+                
+                /* 
+                printOutStateHex(&outState);
+                check_sizes();
+                */
+
+
+                setDeviceOutputState(&con, &outState); /* Send Data to Device */
 				
 				
 				
@@ -324,7 +391,7 @@ int main()
 			else
 			{
 				/* Device disconnected show error and try to reconnect */
-                printf("\nDevice removed!\n");
+                printf("\nDevice removed! \n Reconnect Device Again !\n");
                 reconnectDevice(&con);
 			}
         }
@@ -342,8 +409,4 @@ int main()
     system("pause");
     return 0;
 }
-
-
-
-
 

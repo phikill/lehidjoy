@@ -1,15 +1,21 @@
+/*
+    DS_CRC32.c is part of DualSenseWindows
+    https://github.com/Ohjurot/DualSense-Windows
+
+    Contributors of this file:
+    11.2020 Ludwig Füchsl
+
+    Licensed under the MIT License (To be found in repository root directory)
+
+    MODC89: PHIKILL
+*/
 
 #include"DS_CRC32.h"
-
-#include<stdio.h>
-#include<stdint.h>
-
-#include<windows.h>
 
 /* Function to calculate CRC32 */
 UINT32 computeCRC32(unsigned char* buffer, size_t len) 
 {
-    size_t i;
+    size_t i = 0;
     /* Start point */
     UINT32 result = crcSeed;
     
@@ -23,8 +29,3 @@ UINT32 computeCRC32(unsigned char* buffer, size_t len)
     /* Return result */
     return result;
 }
-
-
-
-
-

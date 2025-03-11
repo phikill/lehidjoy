@@ -1,26 +1,131 @@
+/*
+    IO.cpp is part of DualSenseWindows
+    https://github.com/Ohjurot/DualSense-Windows
 
+    Contributors of this file:
+    11.2020 Ludwig Füchsl
 
+    Licensed under the MIT License (To be found in repository root directory)
+
+    MODC89: PHIKILL
+*/
+
+#include<windows.h>
 
 #include<wchar.h>
+
+#include<setupapi.h>
+#include<devguid.h>
+#include<initguid.h>
+#ifndef __HIDSDI_H__
+    #include<hidsdi.h>
+#endif
+
 
 #include"io.h"
 #include"DS_CRC32.h"
 #include"hidjoy_input.h"
 #include"hidjoy_output.h"
 
-/* Manually aligned structure to avoid error 1784 on Watcom */
+#include<string.h> 
 
+#include<stddef.h> /* For size_t */
+
+
+
+/* Manually aligned structure to avoid error 1784 on Watcom */
 #ifdef __WATCOMC__
+    #include<stdbool.h>
+
 	#pragma pack(push, 1) 
-	typedef struct 
-	{
-    	DWORD cbSize;
-    	char DevicePath[1]; /* First character of the path */
-	} SP_DEVICE_INTERFACE_DETAIL_DATA_ALIGNED;
+	   typedef struct 
+	   {
+    	   DWORD cbSize;
+    	   char DevicePath[1]; /* First character of the path */
+	   } SP_DEVICE_INTERFACE_DETAIL_DATA_ALIGNED;
 	#pragma pack(pop)
+
+    #define EINVAL 22  /* Error code for invalid arguments */
+    typedef int errno_t;
+
+    /* strncpy_s implementation for C89 */
+    errno_t strncpy_s(char *dest, 
+                      size_t dest_size, 
+                      const char *src, 
+                      size_t count) 
+    {
+        size_t i;
+
+        if(dest == NULL || src == NULL) 
+        {
+            return EINVAL;  /* Returns error if pointers are invalid */
+        }
+
+        if(dest_size == 0) 
+        {
+            return EINVAL;  /* Returns error if destination size is zero */
+        }
+
+        for(i = 0; i < count && i < dest_size - 1 && src[i] != '\0'; i++) 
+        {
+            dest[i] = src[i];
+        }
+
+        /* Ensures that the destination will always have '\0' at the end */
+        if(i < dest_size) 
+        {
+            dest[i] = '\0';
+        } 
+        else 
+        {
+            dest[dest_size - 1] = '\0'; /* If the entire string does not fit, end the string with '\0' */
+        }
+
+        return 0; /* Sucess */
+    }
+
+    /* strcpy_s implementation for C89 */
+    int strcpy_s(char *dest, size_t dest_size, const char *src) 
+    {
+        size_t i;
+
+        /* Checks for null pointers */
+        if(!dest || !src) 
+        {
+            return 1; /* Indicates error */
+        }
+
+        /* Check if the destination size is sufficient */
+        for (i = 0; i < dest_size - 1; i++) 
+        {
+            if ((dest[i] = src[i]) == '\0') 
+            {
+                return 0; /* Sucess */
+            }
+        }
+
+        /* Ensures the resulting string is null terminated */
+        dest[dest_size - 1] = '\0';
+
+        return 1; /* Indicates truncation */
+    }
+
+
 
 
 #endif
+
+#ifdef _MSC_VER
+    #include<stdbool.h>
+
+    #pragma pack(push, 1) 
+       typedef struct 
+       {
+           DWORD cbSize;
+           char DevicePath[1]; /* First character of the path */
+       } SP_DEVICE_INTERFACE_DETAIL_DATA_ALIGNED;
+    #pragma pack(pop)
+#endif /* _MSC_VER */
 
 /*
     enumDevices()
@@ -40,10 +145,10 @@ Information storage: If a DS5 control is found, its information is stored in a b
 Return: Returns the number of devices found or an error if the buffer is too small or another error occurs during execution.
 */
 
-DS5W_ReturnValue enumDevices(void *ptrBuffer, 
-                             unsigned int inArrLength, 
-                             unsigned int *requiredLength, 
-                             int pointerToArray) 
+DS5W_ReturnValue enumDevices(void           *ptrBuffer, 
+                             unsigned int   inArrLength, 
+                             unsigned int   *requiredLength, 
+                             bool            pointerToArray) 
 {
     HDEVINFO hidDiHandle;
     SP_DEVINFO_DATA hidDiInfo;
@@ -59,7 +164,7 @@ DS5W_ReturnValue enumDevices(void *ptrBuffer,
     }
 
     HidD_GetHidGuid(&hidGuid);
-    hidDiHandle = SetupDiGetClassDevs(&hidGuid, NULL, NULL, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
+    hidDiHandle = SetupDiGetClassDevs(&hidGuid, NULL, NULL, DIGCF_DEVICEINTERFACE | DIGCF_PRESENT);
     if(!hidDiHandle || (hidDiHandle == INVALID_HANDLE_VALUE)) 
     {
         /* Error getting HID device list */
@@ -67,9 +172,9 @@ DS5W_ReturnValue enumDevices(void *ptrBuffer,
         return DS5W_E_EXTERNAL_WINAPI;
     }
 
+    /* Enumerate over hid device */
     hidDiInfo.cbSize = sizeof(SP_DEVINFO_DATA);
     
-
     while(SetupDiEnumDeviceInfo(hidDiHandle, devIndex, &hidDiInfo))
     {
         DWORD ifIndex = 0;
@@ -86,13 +191,7 @@ DS5W_ReturnValue enumDevices(void *ptrBuffer,
         {
             DWORD requiredSize = 0;
             SP_DEVICE_INTERFACE_DETAIL_DATA *deviceDetail;
-            SP_DEVINFO_DATA devInfoData;
-
             HANDLE deviceHandle;
-
-
-            memset(&devInfoData, 0, sizeof(SP_DEVINFO_DATA));
-            devInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
 
 
             /* Gets the required size for the detail structure */
@@ -106,7 +205,9 @@ DS5W_ReturnValue enumDevices(void *ptrBuffer,
             }
 
             /* Allocate memory for path on the stack */
-            deviceDetail = (SP_DEVICE_INTERFACE_DETAIL_DATA_ALIGNED*)malloc(requiredSize + sizeof(DWORD));
+            deviceDetail = (struct _SP_DEVICE_INTERFACE_DETAIL_DATA_A *)
+                           (SP_DEVICE_INTERFACE_DETAIL_DATA_ALIGNED*)malloc(requiredSize + sizeof(DWORD));
+
             if(!deviceDetail) 
             {
                 printf("Error allocating memory.\n");
@@ -116,8 +217,6 @@ DS5W_ReturnValue enumDevices(void *ptrBuffer,
 
             /* Get device path */
             deviceDetail->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA_ALIGNED);
-
-            /* deviceDetail->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA) + 256; / for win64 */
 
             if(SetupDiGetDeviceInterfaceDetail(hidDiHandle, &ifDiInfo, deviceDetail, requiredSize, NULL, NULL)) 
             {
@@ -192,8 +291,8 @@ DS5W_ReturnValue enumDevices(void *ptrBuffer,
                     /* Copy path */
                     if(ptrInfo) 
                     {
-                       // wcscpy_s(ptrInfo->_internal.path, 260, (const wchar_t*)deviceDetail->DevicePath);
-                        strcpy(ptrInfo->_internal.path, (const char*)deviceDetail->DevicePath);
+                        strcpy_s(ptrInfo->_internal.path, sizeof(ptrInfo->_internal.path), (const char*)deviceDetail->DevicePath);
+                        
                     }
 
                     /* Get preparsed data */
@@ -234,12 +333,12 @@ DS5W_ReturnValue enumDevices(void *ptrBuffer,
             }
             else
             {
-                //printf(" [!ERROR]: deviceHandle Error \n \n");
+                /* printf(" [!ERROR]: deviceHandle Error \n \n"); */
             }
-            ifIndex++; // Increment index
-            free(deviceDetail); // Free device from mem
+            ifIndex++; /* Increment index */
+            free(deviceDetail); /* Free device from mem */
         }
-        devIndex++; // Increment index
+        devIndex++; /* Increment index */
     } 
 
     /* Check if you have reached the end of the list */
@@ -270,7 +369,7 @@ DS5W_ReturnValue enumDevices(void *ptrBuffer,
 #define DEVICE_PATH_MAX 260
 
 DS5W_ReturnValue initDeviceContext(DeviceEnumInfo* ptrEnumInfo, 
-                                   DeviceContext* ptrContext) 
+                                   DeviceContext*  ptrContext) 
 {
     HANDLE deviceHandle;
     unsigned short reportLength = 0;
@@ -308,8 +407,10 @@ DS5W_ReturnValue initDeviceContext(DeviceEnumInfo* ptrEnumInfo,
     ptrContext->_internal.connection = ptrEnumInfo->_internal.connection;
     ptrContext->_internal.deviceHandle = deviceHandle;
 
-    strncpy(ptrContext->_internal.devicePath, ptrEnumInfo->_internal.path, DEVICE_PATH_MAX - 1);
-    ptrContext->_internal.devicePath[DEVICE_PATH_MAX - 1] = '\0'; /* Guarantees termination */
+    strncpy_s(ptrContext->_internal.devicePath, 
+              sizeof(ptrContext->_internal.devicePath), 
+              ptrEnumInfo->_internal.path, 260 - 1);
+    ptrContext->_internal.devicePath[260 - 1] = '\0'; /* Guarantees termination */
 
     /* Get input report length */
     if(ptrContext->_internal.connection == BT) 
@@ -370,7 +471,7 @@ DS5W_ReturnValue reconnectDevice(DeviceContext* ptrContext)
     HANDLE deviceHandle;
 
     /* Verify that the device path is not empty */
-    if (strlen(ptrContext->_internal.devicePath) == 0) 
+    if(strlen(ptrContext->_internal.devicePath) == 0) 
     {
         return DS5W_E_INVALID_ARGS;
     }
@@ -473,7 +574,7 @@ DS5W_ReturnValue getDeviceInputState(DeviceContext* ptrContext,
 }
 
 /* Main function to set the device output state */
-DS5W_ReturnValue setDeviceOutputState(DeviceContext* ptrContext, 
+DS5W_ReturnValue setDeviceOutputState(DeviceContext*  ptrContext, 
                                       DS5OutputState* ptrOutputState)
 {
     unsigned short outputReportLength = 0;
@@ -506,10 +607,10 @@ DS5W_ReturnValue setDeviceOutputState(DeviceContext* ptrContext,
     }
 
     /* Clears the data in the buffer */
-    ZeroMemory(ptrContext->_internal.hidBuffer, outputReportLength);
+    memset(ptrContext->_internal.hidBuffer, 0, outputReportLength);
 
     /* Fills the output buffer depending on the connection type */
-    if (ptrContext->_internal.connection == BT) 
+    if(ptrContext->_internal.connection == BT) 
     {
         /* Report Type for Bluetooth */
         ptrContext->_internal.hidBuffer[0x00] = 0x31;  /* Type identifier for BT */

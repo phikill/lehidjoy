@@ -27,13 +27,11 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
+
+    MODC89: PHIKILL
 */
 
 #include<windows.h>
-#include<setupapi.h>
-#include<devguid.h>
-#include<initguid.h>
-#include<hidsdi.h>
 
 #include<stdio.h>
 #include<stdlib.h>
@@ -43,12 +41,15 @@
 #include"hidjoy_device.h"
 #include"hidjoy_state.h"
 
+#ifdef __WATCOMC__
+    #include<stdbool.h>
+#endif
 
 /* function to enumerate and detect HID devices */
 DS5W_ReturnValue enumDevices(void           *ptrBuffer, 
                              unsigned int   inArrLength, 
                              unsigned int   *requiredLength, 
-                             int            pointerToArray);
+                             bool            pointerToArray);
 
 /* function to start the device according to enumDevices */
 DS5W_ReturnValue initDeviceContext(DeviceEnumInfo*  ptrEnumInfo, 

@@ -12,17 +12,20 @@
     11.2020 Ludwig Füchsl
 
     Licensed under the MIT License (To be found in repository root directory)
+
+    MODC89: PHIKILL
 */
 
 
 /* Enum for device connection type */
-typedef enum 
+typedef unsigned char _DeviceConnection;
+typedef enum _DeviceConnection
 {
     /* Controller connected via USB */
     USB = 0,
 
     /* Controller connected via Bluetooth */
-    BT = 1
+    BT = 1,
 } DeviceConnection;
 
 /* Framework for storing device information during discovery */
@@ -37,7 +40,6 @@ typedef struct
         /* Discovered device connection type */
         DeviceConnection connection;
     } _internal;
-
 } DeviceEnumInfo;
 
 /* Structure for device context */
